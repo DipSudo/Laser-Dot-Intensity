@@ -11,8 +11,6 @@ RCP = cv2.imread("dots.png", cv2.IMREAD_GRAYSCALE)   #right circular polarised i
 LCP = LCP.astype(np.float32)
 RCP = RCP.astype(np.float32)
 
-
-
 def background_normalise(image):
     
     """
@@ -20,8 +18,8 @@ def background_normalise(image):
     Normalise the image by dividing by a blurred version to remove background variations
     
     args:
-        image: 2D numpy array of the image to normalise
-        returns: 2D numpy array of the normalised image
+        image: 2D array of the image to normalise
+        returns: 2D array of the normalised image
         
     """
 
@@ -32,7 +30,7 @@ def background_normalise(image):
     background[background == 0] = 1
 
     # Normalise
-    normalised = image / background
+    normalised = image /background
 
     return normalised
 
@@ -40,23 +38,66 @@ def background_normalise(image):
 norm_LCP = background_normalise(LCP)
 norm_RCP = background_normalise(RCP)
 
-# Plotting the original and normalised images 
-plt.figure(figsize=(12,4))
+# # Plotting the original and normalised images 
+# plt.figure(figsize=(12,4))
 
-plt.subplot(131)
-plt.title("Original LCP")
-plt.imshow(LCP, cmap='gray')
-plt.axis("off")
+# plt.subplot(131)
+# plt.title("Original LCP")
+# plt.imshow(LCP, cmap='gray')
+# plt.axis("off")
 
-plt.subplot(132)
-plt.title("Normalised LCP")
-plt.imshow(norm_LCP, cmap='gray')
-plt.axis("off")
+# plt.subplot(132)
+# plt.title("Normalised LCP")
+# plt.imshow(norm_LCP, cmap='gray')
+# plt.axis("off")
 
-plt.subplot(133)
-plt.title("Normalised RCP")
-plt.imshow(norm_RCP, cmap='gray')
-plt.axis("off")
+# plt.subplot(133)
+# plt.title("Normalised RCP")
 
-plt.tight_layout()
-plt.show()
+# plt.imshow(norm_RCP, cmap='gray')
+# plt.axis("off")
+
+# plt.tight_layout()
+# plt.show()
+
+def detect_dots(image):
+    
+    """
+    Detect bright circular dots in a normalised image using Hough Transform.
+    
+    Args:
+        image: 2D array of normalised image 
+    
+    Returns:
+        List of (x, y) coordinates of detected dots
+    """
+    # Convert to 8-bit
+    img = (image / image.max() * 255).astype(np.uint8)
+    
+    # Smooth image to reduce noise
+    blur = cv2.GaussianBlur(img, (9, 9), 1.5)
+    
+    # Detect circles using Hough Transform
+    circles = cv2.HoughCircles(
+        blur,
+        cv2.HOUGH_GRADIENT,
+        dp=1.0,
+        minDist=10,
+        param1=50,
+        param2=15,
+        minRadius=3,
+        maxRadius=20
+    )
+    
+    # Format output
+    if circles is not None:
+        circles = np.round(circles[0]).astype(int)
+        dots = [(x, y) for x, y, r in circles]
+    else:
+        dots = []
+    
+    return dots
+
+dots = detect_dots(norm_LCP)
+
+print("Detected dots:", len(dots))
