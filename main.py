@@ -98,6 +98,19 @@ def detect_dots(image):
     
     return dots
 
+
 dots = detect_dots(norm_LCP)
 
 print("Detected dots:", len(dots))
+
+# Plotting detected dots on the normalised image
+plt.figure(figsize=(6,6))
+plt.imshow(norm_LCP, cmap='gray')
+
+x = [d[0] for d in dots]
+y = [d[1] for d in dots]
+
+plt.scatter(x, y, color='red', s=50)
+plt.title("Detected Dots")
+
+plt.show()
