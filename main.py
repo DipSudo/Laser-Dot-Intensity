@@ -190,3 +190,39 @@ print("Detected RCP dots:", len(RCP_dots))
 # plt.tight_layout()
 # plt.show()
 
+def extract_intensity(image, dots, radius=6):
+    
+    """
+    Extract mean intensity around each detected dot
+    
+    args:
+        image : normalised image
+        dots  : list of (x,y) coordinates
+        radius: region size around each dot
+        
+    returns:
+        array of mean intensities
+    """
+    
+    intensities = []
+
+    for (x, y) in dots:
+        
+        # Create circular mask
+        mask = np.zeros_like(image, dtype=np.uint8)
+        cv2.circle(mask, (int(x), int(y)), radius, 255, -1)
+        
+        # Mean intensity inside dot
+        mean_val = cv2.mean(image, mask=mask)[0]
+        intensities.append(mean_val)
+
+    return np.array(intensities)
+
+
+# Extract intensities
+intensity_LCP = extract_intensity(norm_LCP, LCP_dots)
+intensity_RCP = extract_intensity(norm_RCP, RCP_dots)
+
+print("Intensity extraction complete")
+
+difference = intensity_LCP - intensity_RCP
