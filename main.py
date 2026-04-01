@@ -4,12 +4,28 @@ import matplotlib.pyplot as plt
 
 # Importing the left and right circular polarised images
 LCP = cv2.imread("dots.png", cv2.IMREAD_GRAYSCALE)   #left circular polarised image
-RCP = cv2.imread("dots.png", cv2.IMREAD_GRAYSCALE)   #right circular polarised image
+# RCP = cv2.imread("dots.png", cv2.IMREAD_GRAYSCALE)   #right circular polarised image 
 
+def simulate_RCP(LCP, variation=0.03, noise=0.01):
+    
+    """
+    Simulate an RCP image from LCP for testing purposes
+    
+    """
+    
+    # Simulate polarisation contrast
+    RCP = LCP * (1 - variation)
+    
+    # Add small random noise
+    noise_map = np.random.normal(0, noise * np.std(LCP), LCP.shape)
+    
+    RCP = RCP + noise_map
+    
+    return RCP.astype(np.float32)
 
-# Convert to float
-LCP = LCP.astype(np.float32)
-RCP = RCP.astype(np.float32)
+LCP = LCP.astype(np.float32)  # Convert to float for processing 
+# RCP = RCP.astype(np.float32)
+RCP = simulate_RCP(LCP)      # Simulate RCP from LCPfor testing purposes
 
 def background_normalise(image):
     
@@ -146,14 +162,31 @@ def detect_dots_blob(image):
     return dots, img_uint8
 
 # Detect blobs
-dots, img = detect_dots_blob(norm_LCP)
+LCP_dots, LCP_img = detect_dots_blob(norm_LCP)
+RCP_dots, RCP_img = detect_dots_blob(norm_RCP)
 
-print("Detected dots:", len(dots))
+print("Detected LCP dots:", len(LCP_dots))
+print("Detected RCP dots:", len(RCP_dots))
 
-# Plot
-plt.figure(figsize=(6, 6))
-plt.imshow(img, cmap='gray')
-plt.title("Blob Detection")
-for cx, cy in dots:
-    plt.plot(cx, cy, 'ro', markersize=4)
-plt.show()
+# # Plotting Blob Detection Results
+# plt.figure(figsize=(6, 6))
+
+# plt.subplot(131)
+# plt.title("Original")
+# plt.imshow(LCP, cmap='gray')
+
+# plt.subplot(132)
+# plt.imshow(LCP_img, cmap='gray')
+# plt.title("LCP Blob Detection")
+# for cx, cy in LCP_dots:
+#     plt.plot(cx, cy, 'ro', markersize=4)
+
+# plt.subplot(133)
+# plt.title("RCP Blob Detection")
+# plt.imshow(RCP_img, cmap='gray')
+# for cx, cy in RCP_dots:
+#     plt.plot(cx, cy, 'ro', markersize=4)
+
+# plt.tight_layout()
+# plt.show()
+
