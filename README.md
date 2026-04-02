@@ -12,6 +12,6 @@ pattern with right circularly polarised light. Each image intensity is normalise
 intensity of the original film. The final signal is a difference image between the two
 normalised images obtained with illumination using left and right circular polarisations.
 
-This is an interview assignment to write a python cod to automatically recognise the dots and compare the intensities between
+This is an interview assignment to write a python code to automatically recognise the dots and compare the intensities between
 the two images obtained with different illumination.
 

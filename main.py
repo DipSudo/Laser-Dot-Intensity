@@ -221,6 +221,8 @@ plt.scatter(
     [d[1] for d in LCP_dots],
     c=difference,
     cmap='seismic',
+    vmin=-np.max(np.abs(difference)),
+    vmax=np.max(np.abs(difference)),
     s=50
 )
 
