@@ -9,7 +9,7 @@ LCP = cv2.imread("dots.png", cv2.IMREAD_GRAYSCALE)   #left circular polarised im
 def simulate_RCP(LCP, variation=0.03, noise=0.01):
     
     """
-    Simulate an RCP image from LCP for testing purposes
+    Simulate a RCP image from LCP for testing purposes
     
     """
     
@@ -30,13 +30,8 @@ RCP = simulate_RCP(LCP)      # Simulate RCP from LCPfor testing purposes
 def background_normalise(image):
     
     """
-    
     Normalise the image by dividing by a blurred version to remove background variations
-    
-    args:
-        image: 2D array of the image to normalise
-        returns: 2D array of the normalised image
-        
+
     """
 
     # Large Gaussian blur to estimate background
@@ -130,9 +125,9 @@ def detect_dots_blob(image):
     
     """
     Detect bright circular blobs in a normalized image.
-    Returns sub-pixel centers of detected blobs.
+    Returns centers of detected blobs.
     
-    This method was fouund to be more effective than Hough Transform (better than thresholding for circular features) for this application, as it can better handle varying blob sizes and intensities.
+    This method was found to be more effective than Hough Transform (better than thresholding for circular features) for this application, as it can better handle varying blob sizes and intensities.
     """
     # Convert normalized image to 8-bit
     img_uint8 = (image / image.max() * 255).astype(np.uint8)
@@ -156,8 +151,8 @@ def detect_dots_blob(image):
     # Detect blobs
     keypoints = detector.detect(img_uint8)
     
-    # Extract (x, y) coordinates
-    dots = [(kp.pt[0], kp.pt[1]) for kp in keypoints]
+    # Extract (x, y, radius) coordinates
+    dots = [(kp.pt[0], kp.pt[1], kp.size/2) for kp in keypoints]
     
     return dots, img_uint8
 
@@ -165,8 +160,8 @@ def detect_dots_blob(image):
 LCP_dots, LCP_img = detect_dots_blob(norm_LCP)
 RCP_dots, RCP_img = detect_dots_blob(norm_RCP)
 
-print("Detected LCP dots:", len(LCP_dots))
-print("Detected RCP dots:", len(RCP_dots))
+# print("Detected LCP dots:", len(LCP_dots))
+# print("Detected RCP dots:", len(RCP_dots))
 
 # # Plotting Blob Detection Results
 # plt.figure(figsize=(6, 6))
@@ -190,39 +185,51 @@ print("Detected RCP dots:", len(RCP_dots))
 # plt.tight_layout()
 # plt.show()
 
-def extract_intensity(image, dots, radius=6):
+def extract_blob_intensity(image, dots):
     
     """
-    Extract mean intensity around each detected dot
+    Extract intensity using blob size
     
-    args:
-        image : normalised image
-        dots  : list of (x,y) coordinates
-        radius: region size around each dot
-        
-    returns:
-        array of mean intensities
     """
-    
+
     intensities = []
 
-    for (x, y) in dots:
+    for (x, y, r) in dots:
         
-        # Create circular mask
         mask = np.zeros_like(image, dtype=np.uint8)
-        cv2.circle(mask, (int(x), int(y)), radius, 255, -1)
-        
-        # Mean intensity inside dot
+        cv2.circle(mask, (int(x), int(y)), int(r), 255, -1)
+
         mean_val = cv2.mean(image, mask=mask)[0]
         intensities.append(mean_val)
 
     return np.array(intensities)
 
-
 # Extract intensities
-intensity_LCP = extract_intensity(norm_LCP, LCP_dots)
-intensity_RCP = extract_intensity(norm_RCP, RCP_dots)
-
-print("Intensity extraction complete")
+intensity_LCP = extract_blob_intensity(norm_LCP, LCP_dots)
+intensity_RCP = extract_blob_intensity(norm_RCP, RCP_dots)
 
 difference = intensity_LCP - intensity_RCP
+
+print("Intensity difference (LCP - RCP):", difference)
+
+# Plot intensity difference map
+plt.figure(figsize=(6,6))
+
+plt.imshow(norm_LCP, cmap='gray')
+plt.scatter(
+    [d[0] for d in LCP_dots],
+    [d[1] for d in LCP_dots],
+    c=difference,
+    cmap='seismic',
+    s=50
+)
+
+# Plot blob outlines
+for (x, y, r) in LCP_dots:
+    circle = plt.Circle((x, y), r, color='white', fill=False, linewidth=0.5)
+    plt.gca().add_patch(circle)
+
+plt.colorbar(label=" Intensity Difference (LCP - RCP)")
+plt.title("Intensity Difference Map for Detected Dots")
+
+plt.show()
